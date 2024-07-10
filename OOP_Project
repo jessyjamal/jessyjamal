@@ -1,0 +1,150 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+class Book:
+    def __init__(self, title, author, isbn):
+        self.title = title
+        self.author = author
+        self.isbn = isbn
+        self.available = True
+    
+    def __str__(self):
+        return f"{self.title} by {self.author}"
+class Patron:
+    def __init__(self, name, id):
+        self.name = name
+        self.id = id
+        self.books_borrowed = []
+
+    def borrow_book(self, book):
+        if book.available:
+            self.books_borrowed.append(book)
+            book.available = False
+            return True
+        else:
+            return False
+
+    def return_book(self, book):
+        if book in self.books_borrowed:
+            self.books_borrowed.remove(book)
+            book.available = True
+            return True
+        else:
+            return False
+class Library:
+    def __init__(self):
+        self.books = []
+        self.patrons = []
+
+    def add_book(self, book):
+        self.books.append(book)
+
+    def register_patron(self, patron):
+        self.patrons.append(patron)
+
+    def find_book_by_title(self, title):
+        for book in self.books:
+            if book.title.lower() == title.lower():
+                return book
+        return None
+
+    def find_patron_by_id(self, id):
+        for patron in self.patrons:
+            if patron.id == id:
+                return patron
+        return None
+class LibraryGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Library Management System")
+        
+        self.library = Library()
+
+        # Labels and Entry widgets
+        ttk.Label(root, text="Book Title:", font=('Helvetica', 10, 'bold')).grid(row=0, column=0, padx=10, pady=10)
+        self.title_entry = ttk.Entry(root)
+        self.title_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        ttk.Label(root, text="Author:", font=('Helvetica', 10, 'bold')).grid(row=1, column=0, padx=10, pady=10)
+        self.author_entry = ttk.Entry(root)
+        self.author_entry.grid(row=1, column=1, padx=10, pady=10)
+
+        ttk.Label(root, text="ISBN:", font=('Helvetica', 10, 'bold')).grid(row=2, column=0, padx=10, pady=10)
+        self.isbn_entry = ttk.Entry(root)
+        self.isbn_entry.grid(row=2, column=1, padx=10, pady=10)
+
+        ttk.Label(root, text="Patron ID:", font=('Helvetica', 10, 'bold')).grid(row=3, column=0, padx=10, pady=10)
+        self.patron_id_entry = ttk.Entry(root)
+        self.patron_id_entry.grid(row=3, column=1, padx=10, pady=10)
+
+        # Buttons
+        colorful_button = tk.Button(root, text="Add Book", command=self.add_book, bg='#ffcccb', fg='black', font=('Helvetica', 10, 'bold'))
+        colorful_button.grid(row=4, column=0, columnspan=2, pady=10, padx=10, ipadx=20, ipady=2)
+        colorful_button = tk.Button(root, text="Register Patron", command=self.register_patron, bg='#ffcccc', fg='black',activebackground='#ffff00',activeforeground='#ff00ff',font=('Helvetica', 10, 'bold'))
+        colorful_button.grid(row=5, column=0, columnspan=2, pady=10, padx=10, ipadx=20, ipady=2)
+        colorful_button = tk.Button(root, text="Borrow Book", command=self.borrow_book, bg='#ffcccc', fg='black',activebackground='#ffff00',activeforeground='#ff00ff',font=('Helvetica', 10, 'bold'))
+        colorful_button.grid(row=6, column=0, columnspan=2, pady=10, padx=10, ipadx=20, ipady=2)
+        colorful_button = tk.Button(root, text="Return Book", command=self.return_book, bg='#ffcccc', fg='black',activebackground='#ffff00',activeforeground='#ff00ff',font=('Helvetica', 10, 'bold'))
+        colorful_button.grid(row=7, column=0, columnspan=2, pady=10, padx=10, ipadx=20, ipady=2)
+    
+        
+        # Output Text
+        self.root.configure(bg='lightpink')
+        self.output_text = tk.Text(root, height=10, width=50)
+        self.output_text.grid(row=8, column=0, columnspan=2, padx=10, pady=10)
+
+    def add_book(self):
+        title = self.title_entry.get()
+        author = self.author_entry.get()
+        isbn = self.isbn_entry.get()
+        book = Book(title, author, isbn)
+        self.library.add_book(book)
+        self.output_text.insert(tk.END, f"Added Book: {book}\n")
+        self.clear_entries()
+
+    def register_patron(self):
+        name = "Patron"  # Simplified for demo
+        id = self.patron_id_entry.get()
+        patron = Patron(name, id)
+        self.library.register_patron(patron)
+        self.output_text.insert(tk.END, f"Registered Patron: {patron.name} (ID: {patron.id})\n")
+        self.clear_entries()
+
+    def borrow_book(self):
+        title = self.title_entry.get()
+        patron_id = self.patron_id_entry.get()
+        book = self.library.find_book_by_title(title)
+        patron = self.library.find_patron_by_id(patron_id)
+        if book and patron:
+            if patron.borrow_book(book):
+                self.output_text.insert(tk.END, f"{patron.name} borrowed {book}\n")
+            else:
+                messagebox.showerror("Error", "Book is not available")
+        else:
+            messagebox.showerror("Error", "Book or Patron not found")
+        self.clear_entries()
+
+    def return_book(self):
+        title = self.title_entry.get()
+        patron_id = self.patron_id_entry.get()
+        book = self.library.find_book_by_title(title)
+        patron = self.library.find_patron_by_id(patron_id)
+        if book and patron:
+            if patron.return_book(book):
+                self.output_text.insert(tk.END, f"{patron.name} returned {book}\n")
+            else:
+                messagebox.showerror("Error", "Book not borrowed by this patron")
+        else:
+            messagebox.showerror("Error", "Book or Patron not found")
+        self.clear_entries()
+
+    def clear_entries(self):
+        self.title_entry.delete(0, tk.END)
+        self.author_entry.delete(0, tk.END)
+        self.isbn_entry.delete(0, tk.END)
+        self.patron_id_entry.delete(0, tk.END)
+
+# Main program
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = LibraryGUI(root)
+    root.mainloop()
